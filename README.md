@@ -1,4 +1,4 @@
-# Trade Booking System
+# Trade Booking Platform
 A trade booking platform which reads order messages to simulate order entry, amendment and cancellation operations, and performs executions of orders where necessary.
 
 ## Overview
