@@ -16,8 +16,11 @@ To interface with the system, a simple, interactive command-line reader tool was
 *TradeID,BBGCode,Currency,Side,Price,Volume,Portfolio,Action,Account,Strategy,User,TradeTimeUTC,ValueDate*
 
 ## Design
-The bid and ask order books were modelled using self-balancing Binary Search Trees. The order books were first arranged by price; high prices took priority in the bid order book while low prices took priority in the ask order book. For equivalent prices, the orders were prioritised by earliest timestamp (regardless of book). As a result of the ordering, an executing order would traverse the fewest possible nodes in the opposite book for price matching. 
+## Price-Time Matching Engine
+The bid and ask order books were modelled using self-balancing Binary Search Trees. The order books were first arranged by price; high prices took priority in the bid order book while low prices took priority in the ask order book. For equivalent prices, the orders were always prioritised by earliest timestamp (regardless of book). As a result of the ordering, an executing order would traverse the fewest possible nodes in the opposite book before completely executing. 
 
-A
+To improve the matching performance, each node of the Tree could contain a doubly-linked list with orders of a common price (i.e. a Tree<Queue<Order>> data struture). As a result, each node of the tree would represent a limit price instead of an order. Orders within each queue would be ordered by earliest to latest timestamp. This would improve the Trading Platform's performance for operations such as insertion and deletion. Instead O(logN), where N is the number of orders, these procedures would have a complexity of O(log(L + O)) where L is the number of unique limit prices and O is the maximum number of order per single limit price. 
+
+
 
 ## Aggregation
