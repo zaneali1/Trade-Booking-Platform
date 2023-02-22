@@ -34,6 +34,6 @@ Due to market conditions, new prices are likely to be inserted towards the outsi
  Self-balancing trees were used to mitigate the performance overhead from this issue. 
 
 ### Aggregation
-Two approaches to order aggregation were used by this trading platform. For aggregation by Strategy, Portfolio and User, a brute-force approach was taken where aggregation was applied to a *master* order book containing all orders. The rder were grouped by price and volume, and the resulting volume groups were summed. 
+Two approaches to order aggregation were used by the trading platform. For aggregation by Strategy, Portfolio and User, a brute-force approach was taken where aggregation was applied to a 'master' order book containing all orders. The orders were grouped by price and property (Strategy, Portfolio or User), and the resulting volume groups were summed. 
   
-For the Bloomberg Code, the aggregation was calculated iteratively. Each order book corresponds to a unique instrument or BBGCode; by using a HashMap<LimitPrice, Volume> structure, the volume for each limit price could be aggregated per order. Then, the data could simply be retrieved without any additional calculations upon request from a user. 
+For the Bloomberg Code, the aggregation was calculated iteratively. Each order book corresponds to a unique instrument or BBGCode; by using a HashMap<LimitPrice, Volume> structure for each order book, the volume for each limit price could be aggregated per order per BBGCode. Then, the aggregated data could simply be retrieved without any additional calculations upon request from a user. 
