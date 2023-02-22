@@ -14,3 +14,10 @@ The trade booking system provides the following functionality:
 To interface with the system, a simple, interactive command-line reader tool was created in /src/main/Java/com/app/Main.java. No data validation is provided -- new orders must be submitted in the CSV format as:
 
 *TradeID,BBGCode,Currency,Side,Price,Volume,Portfolio,Action,Account,Strategy,User,TradeTimeUTC,ValueDate*
+
+## Design
+The bid and ask order books were modelled using self-balancing Binary Search Trees. The order books were first arranged by price; high prices took priority in the bid order book while low prices took priority in the ask order book. For equivalent prices, the orders were prioritised by earliest timestamp (regardless of book). As a result of the ordering, an executing order would traverse the fewest possible nodes in the opposite book for price matching. 
+
+A
+
+## Aggregation
