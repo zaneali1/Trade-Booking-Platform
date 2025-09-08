@@ -1,47 +1,53 @@
-# Trade Booking Platform
-A trade booking platform which reads order messages to simulate order entry, amendment and cancellation operations, and performs executions of orders where necessary.
-
 ## Overview
-The trade booking system provides the following functionality:
-- **Order Entry:** Orders marked *NEW* are received by the platform and order books are updated accordingly.
+A simulation of a CSV trade booking platform which reads order messages to perform order entry, amendment, cancellation, execution and aggregation. 
 
-- **Order Cancellation:** Orders marked *CANCEL* are removed by the platform and order books are updated accordingly (given the target order exists and has not been executed against).
-
-- **Order Amendment:** Orders marked *AMEND* are removed and replaced by the platform with the amended details (given the target order exists and has not been executed against).
-
-- **Order Execution:** The platform automatically executes trades against opposite-limit orders with the the closest possible price to the new order until the volume of the new order is filled (or the opposite-limit order book is empty). Both partial and total executions are possible.
-
-- **Order Aggregation:** The trading platform can aggregate volume by both Price and a chosen property (such as Bloomberg Code, Strategy, Portfolio or User).
-
-To interface with the system, a simple, interactive interactive tool was created in /src/main/Java/com/app/Main.java. No data validation is provided; new orders must be submitted in the CSV format as:
+New orders must be submitted in the CSV format as:
 
 <p align="center">
 <i> TradeID,BBGCode,Currency,Side,Price,Volume,Portfolio,Action,Account,Strategy,User,TradeTimeUTC,ValueDate </i> 
 </p>
 
-Where TradeID is a unique key, the Side is set to *B* or *S* (buy-side or sell-side orders), the Price is numeric, the Volume is a numeric integer, the Action is set to *NEW*, *AMEND* or *CANCEL* and the TradeTimeUTC is in the format: yyyy-MM-ddTHH:mm:ss.SSSSSS.
+- `TradeID` is a unique key  
+- `Side` is set to `B` or `S` (buy-side or sell-side orders)  
+- `Price` is numeric  
+- `Volume` is a numeric integer  
+- `Action` is set to `NEW`, `AMEND`, or `CANCEL`  
+- `TradeTimeUTC` is in the format: `yyyy-MM-ddTHH:mm:ss.SSSSSS`
 
-## Design
+## Features
 ### Price-Time Matching Engine
-The bid and ask order books were modelled using self-balancing Binary Search Trees. The order books were first arranged by price; high prices took priority in the bid order book while low prices took priority in the ask order book. For equivalent prices, the orders were always prioritised by earliest timestamp regardless of book. As a result of the ordering, an executing order would traverse the fewest possible nodes in the opposite book before terminating. 
 
-To improve the matching performance, each node of the Tree could contain a doubly-linked list with orders of a common limit price, i.e. a Tree<Queue<Order>> data struture. As a result, each node of the tree would represent a limit price instead of an order. Orders within each queue would be prioritised by earliest timestamp. 
-  
-As a result, the Trading Platform's performance for operations such as insertion and deletion would be improved. Instead O(logN), where N is the number of orders, these procedures would have a complexity of O(log(L + O)) where L is the number of unique limit prices and O is the maximum number of orders per singular limit price. 
+- `Order Books:` Implemented using self-balancing binary search trees (BSTs).
+- Ordering Rules
+  - `Bid book:` Highest prices first  
+  - `Ask book:` Lowest prices first  
+  - `Timestamp tie-breaker:` Earlier orders have priority for equal prices
+- `Limit Price Queues:` Each BST node represents a limit price and contains a doubly-linked list of orders at that price.
+- `Performance:` Operations such as insertion and deletion have complexity:  
 
- ### Self-Balancing Trees
-Due to market conditions, new prices are likely to be inserted towards the outside of the book. Insertions towards the inside are likely to be matched and executed by the opposite book; for example, orders with earlier timestamps but the same price are matched first.
- 
- These conditions cause the BST to be a tall and unbalanced tree, which has a significantly worse amortised runtime than the balanced version.
- <p align="center">
-<img src="https://github.com/zaneali1/Trade-Booking-System/blob/main/Unbalanced%20Tree.png" width="500"/> 
-</p>
-  
- Self-balancing trees were used to mitigate the performance overhead from this issue. 
+O(log(L + O))
+
+Where:
+- L = number of unique limit prices  
+- O = maximum number of orders per limit price  
+Compared to O(log N) for a flat BST over all orders.
+
+### Self-Balancing Trees
+
+- Market activity can produce tall, unbalanced trees, especially when new prices appear at the edges of the book.
+- Orders with earlier timestamps but the same price are matched first.
+- Without balancing, this can lead to worse amortized runtime for insertions and deletions.
+- Self-balancing trees are used to maintain efficient performance and ensure operations remain near `O(log(L + O))`.
+
 
 ### Aggregation
-Two approaches to order aggregation were used by the trading platform. 
-  
-1. For aggregation by Strategy, Portfolio and User, a brute-force approach was taken where aggregation was applied to a 'master' order book containing all orders. The orders were grouped by price and property (Strategy, Portfolio or User), and the resulting volume groups were aggregated. 
-  
-2. For the Bloomberg Code, the aggregation was calculated iteratively. Each order book corresponds to a unique instrument or BBGCode; by using a HashMap<LimitPrice, Volume> structure for each book, the volume for each limit price could be aggregated per order per BBGCode. Then, the aggregated data could simply be retrieved without any additional calculations upon request from a user. 
+The trading platform supports two approaches for aggregating orders:
+
+1. **By Strategy, Portfolio, and User**  
+   - Aggregation is performed on a master order book containing all orders.  
+   - Orders are grouped by price and the chosen property (Strategy, Portfolio, or User).  
+   - The resulting volumes are summed per group.
+
+2. **By Bloomberg Code**  
+   - Each instrument (BBGCode) has its own order book.  
+   - The volume for each limit price is aggregated per order per BBGCode.
